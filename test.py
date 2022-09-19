@@ -16,10 +16,6 @@ class coord:
         x = inX
         y = inY
 
-    def __init__(self):
-        x = 0
-        y = 0
-
 actionCost = {
     Action.UP : 0.8,
     Action.DOWN : 0.7,
@@ -30,7 +26,7 @@ actionCost = {
 
 class Room:
     dirty = False
-    location = coord()
+    location = coord(0,0)
     neighbors = {}
 
     def __init__(self):
@@ -38,43 +34,43 @@ class Room:
         dirty = False
     
     def __init__(self, inx, iny):
-        coord(inx, iny)
+        location = coord(inx, iny)
 
 allRooms = []
 
 def generateRooms(numX, numY):
     for roomX in range(numX):
         for roomY in range(numY):
-            newRoom = Room(roomX, roomY, False)
+            newRoom = Room(roomX, roomY)
             allRooms.append(newRoom)
 
-def getRoomAtCoord(inCoord = coord()) -> Room:
+def getRoomAtCoord(inCoord) -> Room:
     for r in allRooms:
-        if r.location.x == inCoord.x or r.location.y == inCoord.y:
+        if r.location.x == inCoord.x and r.location.y == inCoord.y:
             return r
     return nullcontext
 
 def findNeighbors():
     for r in allRooms:
         # neighbor up
-        maybeNeighbor = getRoomAtCoord(r.location.x, r.location.y-1)
+        maybeNeighbor = getRoomAtCoord(coord(r.location.x, r.location.y-1))
         if maybeNeighbor != nullcontext:
-            r.neighbors.append({Action.UP : maybeNeighbor})
+            r.neighbors.update({Action.UP : maybeNeighbor})
         #neighbor down
-        maybeNeighbor = getRoomAtCoord(r.location.x, r.location.y+1)
+        maybeNeighbor = getRoomAtCoord(coord(r.location.x, r.location.y+1))
         if maybeNeighbor != nullcontext:
-            r.neighbors.append({Action.DOWN : maybeNeighbor})
+            r.neighbors.update({Action.DOWN : maybeNeighbor})
         #neighbor right
-        maybeNeighbor = getRoomAtCoord(r.location.x+1, r.location.y)
+        maybeNeighbor = getRoomAtCoord(coord(r.location.x+1, r.location.y))
         if maybeNeighbor != nullcontext:
-            r.neighbors.append({Action.RIGHT : maybeNeighbor})
+            r.neighbors.update({Action.RIGHT : maybeNeighbor})
         #neighbor left
-        maybeNeighbor = getRoomAtCoord(r.location.x-1, r.location.y+1)
+        maybeNeighbor = getRoomAtCoord(coord(r.location.x-1, r.location.y+1))
         if maybeNeighbor != nullcontext:
-            r.neighbors.append({Action.LEFT : maybeNeighbor})
+            r.neighbors.update({Action.LEFT : maybeNeighbor})
 
 generateRooms(4, 5)
-#findNeighbors()
+findNeighbors()
 
-#print(getRoomAtCoord(1,1).x)
+# print(allRooms)
         
