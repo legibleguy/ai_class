@@ -49,8 +49,8 @@ class searchAlg:
         pass
 
 #code below is just to test it out
-from RoomsBase import debugRooms
-testgraph = searchAlg(5,4)
-testgraph.setAgentLocation(3,4)
-testgraph.setDirtyRooms([[1,2],[2,4],[3,5]])
-debugRooms(testgraph.rooms, testgraph.currLoc)
+# from RoomsBase import debugRooms
+# testgraph = searchAlg(5,4)
+# testgraph.setAgentLocation(3,4)
+# testgraph.setDirtyRooms([[1,2],[2,4],[3,5]])
+# debugRooms(testgraph.rooms, testgraph.currLoc)
