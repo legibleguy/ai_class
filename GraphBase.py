@@ -40,7 +40,14 @@ class searchAlg:
     def setRoomClean(self, x, y):
         for room in self.rooms:
             if room.x == x and room.y == y: room.isDirty = False
-    
+
+    # get room, used for adding neighbors of current loaction room to queue
+    def getCurrentRoom(self, x, y):
+        for room in self.rooms:
+            if room.x == x and room.y == y:
+                return room
+
+
     def doAction(self, inAction):
         self.currScore -=  actionCost[inAction]
         self.offsetAgent(actionDir[inAction])
