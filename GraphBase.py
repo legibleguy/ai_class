@@ -10,6 +10,18 @@ class searchAlg:
     sizeX = 0
     sizeY = 0
     currLoc = [0,0]
+    # tracking variables used in ids don't touch them :(
+    # track first five and sequence of actions
+    idsfirstfive = []
+    idssequence = []
+    # tracks nodes expanded and created, used for data analysis
+    idsnodesexpanded = 0
+    idsnodescreated = 0
+    # if current search has reached goal, used to quickly exit recursion
+    idscleanedit = 0
+    # used to set new start position to node that was just cleaned
+    idsstart = [0, 0]
+
     def __init__(self, inSizeX, inSizeY):
         self.sizeX = inSizeX
         self.sizeY = inSizeY
@@ -40,7 +52,14 @@ class searchAlg:
     def setRoomClean(self, x, y):
         for room in self.rooms:
             if room.x == x and room.y == y: room.isDirty = False
-    
+
+    # get room, used for adding neighbors of current location room to queue
+    def getCurrentRoom(self, x, y):
+        for room in self.rooms:
+            if room.x == x and room.y == y:
+                return room
+
+
     def doAction(self, inAction):
         self.currScore -=  actionCost[inAction]
         self.offsetAgent(actionDir[inAction])
@@ -49,8 +68,8 @@ class searchAlg:
         pass
 
 #code below is just to test it out
-from RoomsBase import debugRooms
-testgraph = searchAlg(5,4)
-testgraph.setAgentLocation(3,4)
-testgraph.setDirtyRooms([[1,2],[2,4],[3,5]])
-debugRooms(testgraph.rooms, testgraph.currLoc)
+# from RoomsBase import debugRooms
+# testgraph = searchAlg(5,4)
+# testgraph.setAgentLocation(3,4)
+# testgraph.setDirtyRooms([[1,2],[2,4],[3,5]])
+# debugRooms(testgraph.rooms, testgraph.currLoc)
