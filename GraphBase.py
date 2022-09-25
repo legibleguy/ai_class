@@ -10,6 +10,18 @@ class searchAlg:
     sizeX = 0
     sizeY = 0
     currLoc = [0,0]
+    # tracking variables used in ids don't touch them :(
+    # track first five and sequence of actions
+    idsfirstfive = []
+    idssequence = []
+    # tracks nodes expanded and created, used for data analysis
+    idsnodesexpanded = 0
+    idsnodescreated = 0
+    # if current search has reached goal, used to quickly exit recursion
+    idscleanedit = 0
+    # used to set new start position to node that was just cleaned
+    idsstart = [0, 0]
+
     def __init__(self, inSizeX, inSizeY):
         self.sizeX = inSizeX
         self.sizeY = inSizeY
@@ -41,7 +53,7 @@ class searchAlg:
         for room in self.rooms:
             if room.x == x and room.y == y: room.isDirty = False
 
-    # get room, used for adding neighbors of current loaction room to queue
+    # get room, used for adding neighbors of current location room to queue
     def getCurrentRoom(self, x, y):
         for room in self.rooms:
             if room.x == x and room.y == y:

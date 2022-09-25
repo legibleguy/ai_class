@@ -1,133 +1,163 @@
+import timeit
+
 from GraphBase import searchAlg
 from RoomsBase import debugRooms
-from RoomsBase import Room
-from RoomsBase import Action
-from RoomsBase import actionCost
-from RoomsBase import actionDir
-import time
 
 
 # used during testing in order to create graphs for search to test
 # in final version idt_search_run can just be passed a graph directly
 def idt_search_prep():
-    # create fringe
-    fringe = []
-    # create graph1
+    print("\n\nGraph 1")
+    print("====================================================")
+    # create graph
     graph = searchAlg(5, 4)
+    # set parameters of graph to graph 1
     graph.setAgentLocation(2, 2)
     graph.setDirtyRooms([[1, 2], [2, 4], [3, 5]])
+    # print out graph
     debugRooms(graph.rooms, graph.currLoc)
     # run search 1
-    idt_search_run(graph, fringe)
-    # change graph to second parameters
+    idt_search_run(graph)
+    # set parameters of graph to graph 2
     graph.setRoomClean(3, 5)
     graph.setAgentLocation(3, 2)
-    graph.setDirtyRooms([[2, 1], [3, 3]])
-    debugRooms(graph.rooms, graph.currLoc)
-    # run search on updated graph
-
-
-def idt_search_run(graph, fringe):
-    # start timer
-    start = time.time()
-    # reset graph score to 0
-    graph.currScore = 0.0
-    # Initat IDDFS
-    maxdepth = 0
-    nodescreated = 0
-    rootx, rooty = graph.currLoc
-    # i=0
-    while not graph.areAllRoomsClean():
-        idt_depth_search(graph, maxdepth, fringe, nodescreated)
-        nodescreated += 1
-        maxdepth += 1
-        graph.setAgentLocation(rootx, rooty)
-        graph.visited = []
-        # i+=1
-
-    # end timer
-    end = time.time()
-    # reset the graph
+    graph.setDirtyRooms([[1, 2], [2, 4], [2, 1], [3, 3]])
+    # reset tracking variables used in graph
+    graph.idsnodescreated = 0
+    graph.idsnodesexpanded = 0
+    graph.idssequence=[]
+    graph.idscleanedit = 0
+    graph.idsstart=[0,0]
+    graph.idsfirstfive=[]
     graph.currScore = 0.0
     graph.visited = []
+    # run search 2
+    print("\n\nGraph 2")
+    print("====================================================")
+    debugRooms(graph.rooms, graph.currLoc)
+    # print out graph
+    idt_search_run(graph)
+
+
+def idt_search_run(graph):
+    # start timer
+    start = timeit.default_timer()
+    # reset graph score to 0
+    graph.currScore = 0.0
+    # Initiate IDDFS
+    # create variables, update tracking variables in graph
+    graph.idsstart = [graph.currLoc[0], graph.currLoc[1]]
+    maxdepth = 0
+    while True:
+        idt_depth_search(graph, maxdepth)
+        if graph.areAllRoomsClean():
+            graph.idssequence.append("SUCK")
+            break
+        graph.setAgentLocation(graph.idsstart[0],graph.idsstart[1])
+        if graph.idscleanedit ==1:
+            graph.idssequence.append("SUCK")
+            maxdepth =1
+        else:
+            maxdepth += 1
+        graph.idscleanedit=0
+        graph.visited = []
+    # end timer
+    end = timeit.default_timer()
+
     # print info
     #   first 5 search nodes in the order they would be expanded
     #   total number of nodes expanded
     #   the total number of nodes generated,
     #   the CPU execution time in seconds.
-    print("Time Elapsed: " +  str(end - start))
+    print("\n====================================================")
+    print("First five nodes visited: "+str(graph.idsfirstfive))
+    print("====================================================")
+    print("Nodes created: "+ str(graph.idsnodescreated))
+    print("Nodes Expanded: "+str(graph.idsnodesexpanded))
+    print("Time Elapsed: " +  str(end - start) + " seconds")
     #   The solution found
+    print("====================================================")
+    print("Solution Sequence: " + str(graph.idssequence))
+    print("Number of moves: " + str(len(graph.idssequence)))
+    print("Solution Cost: " + str(graph.currScore))
+    print("====================================================")
+    # reset the graph
 
 
-def idt_depth_search(graph, depth, fringe, nodescreated):
 
-    print("cum  " + str(nodescreated) + "   " + str(depth))
-    print("current room is: (" + str(graph.currLoc[0])+","+str(graph.currLoc[1])+")")
+def idt_depth_search(graph, depth):
+    if graph.idscleanedit == 1:
+        return
     # get current room
     room = graph.getCurrentRoom(graph.currLoc[0], graph.currLoc[1])
-    # check if room is dirty
+    if len(graph.idsfirstfive) < 5:
+        graph.idsfirstfive.append([room.x,room.y])
+    # increment nodes expanded
+    graph.idsnodescreated += 1
+    # add the current node to list of visited nodes
     graph.visited.append([room.x, room.y])
+    # check if room is dirty
     if room.isDirty:
-        print('cleaned a room: (" + str(graph.currLoc[0])+","+str(graph.currLoc[1])+")"')
+        # if room is dirty we set to clean and add to score
         room.isDirty = False
         graph.currScore += 5
-        # check if all rooms are cleaned, if so then exit everything
-        if graph.areAllRoomsClean():
-            return 1
-
+        graph.idscleanedit = 1
+        # set cleaned room as start of nect IDS sequence
+        graph.idsstart =[room.x, room.y]
+        return
+    # used to make sure we don't go past the depth limit of this current IDS
     if depth == 0:
         return
-    # for neighbor in graph.neighbors:
-    #     # print(neighbor)
-    #     nodescreated += 1
-    #     if idt_depth_search(neighbor, depth-1, fringe, nodescreated):
-    #         return True
-
-    # create neighbor cords
-    neighborslist = [[room.x, room.y - 1], [room.x - 1, room.y], [room.x + 1, room.y], [room.x, room.y + 1]]
-    print(neighborslist)
+    # create neighbor cords, all neighbors are rooms that are 1 action from current room
+    neighborslist = [[room.x, room.y-1], [room.x-1, room.y],  [room.x, room.y + 1], [room.x + 1, room.y]]
+    # iterate over all neighboring rooms
     for neighbor in neighborslist:
+        # check that the room cords created are within the bounds of graph,
+        # if it is outside upper limit or 0 remove it from list of neighbors
         if neighbor[0] > 4 or neighbor[1] > 5:
-            print(":do we enter here>")
             neighborslist.remove([neighbor[0], neighbor[1]])
         elif neighbor[0] and neighbor[1] != 0:
-            print("do we enter herez")
+            # increment nodes expanded
+            graph.idsnodesexpanded += 1
+            # check that the neighbor has not already been added before,
+            # we are running a tree search on a undirected graph
+            # it is necessary otherwise it can get stuck in cycles
+            # bad coding practive, could move most into seperate function but im lazy
             if neighbor not in graph.visited:
                 if neighbor[1] < room.y:
-                    print("do we enter here1")
-                    nodescreated += 1
                     graph.offsetAgent(0, -1)
-                    graph.currScore += 1
-                    idt_depth_search(graph, (depth - 1), fringe, nodescreated)
+                    idt_depth_search(graph, (depth - 1))
+                    if graph.idscleanedit ==1:
+                        graph.currScore += 1
+                        graph.idssequence.append("UP")
+                        return
                     graph.offsetAgent(0, 1)
-                if neighbor[0] < room.x:
-                    print("do we enter here2")
-                    nodescreated += 1
-                    graph.offsetAgent(-1, 0)
-                    graph.currScore += 3
-                    idt_depth_search(graph, (depth - 1), fringe, nodescreated)
-                    graph.offsetAgent(1, 0)
-                if neighbor[0] > room.x:
-                    print("do we enter here3")
-                    nodescreated += 1
-                    graph.offsetAgent(1, 0)
-                    graph.currScore += 4
-                    idt_depth_search(graph, (depth - 1), fringe, nodescreated)
-                    graph.offsetAgent(-1, 0)
-                if neighbor[1] > room.y:
-                    print("do we enter here4")
-                    nodescreated += 1
+                elif neighbor[1] > room.y:
                     graph.offsetAgent(0, 1)
-                    graph.currScore += 2
-                    idt_depth_search(graph, (depth - 1), fringe, nodescreated)
+                    idt_depth_search(graph, (depth - 1))
+                    if graph.idscleanedit ==1:
+                        graph.currScore += 2
+                        graph.idssequence.append("DOWN")
+                        return
                     graph.offsetAgent(0, -1)
+                elif neighbor[0] < room.x:
+                    graph.offsetAgent(-1, 0)
+                    idt_depth_search(graph, (depth - 1))
+                    if graph.idscleanedit ==1:
+                        graph.currScore += 3
+                        graph.idssequence.append("LEFT")
+                        return
+                    graph.offsetAgent(1, 0)
+                elif neighbor[0] > room.x:
+                    graph.offsetAgent(1, 0)
+                    idt_depth_search(graph, (depth - 1))
+                    if graph.idscleanedit == 1:
+                        graph.currScore += 4
+                        graph.idssequence.append("RIGHT")
+                        return
+                    graph.offsetAgent(-1, 0)
         else:
-            print(":do we enter here0")
             neighborslist.remove([neighbor[0], neighbor[1]])
-
-    # if graph.rooms[graph.currLoc].isDirty is True:
-    #     graph.setRoomClean(graph.rooms[graph.currLoc])
-    #     graph.doAction(Action.SUCK)
 
 
 idt_search_prep()
